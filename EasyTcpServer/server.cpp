@@ -46,7 +46,7 @@ int main()
     char _recvBuf[128] = {};
     while(true){
         //5. 先接收
-        int nLen = recv(_sock, _recvBuf, 128, 0);
+        int nLen = recv(_cSock, _recvBuf, sizeof(_recvBuf), 0);
         if (nLen < 0){
             printf("客户端已退出， 任务结束。\n");
             break;
@@ -70,7 +70,8 @@ int main()
     }
     //6.closesocket 关闭套接字
     closesocket(_sock);
-
     WSACleanup();
+    printf("已退出，任务结束.\n");\
+    getchar();
     return 0;
 }
