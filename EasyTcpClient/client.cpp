@@ -28,21 +28,39 @@ int main()
     _sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
     int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
     if (SOCKET_ERROR == ret){
-        printf("错误，连接失败...\n");
+        printf("错误，连接服务器失败...\n");
     }
     else {
-        printf("连接成功\n");
+        printf("连接服务器成功\n");
     }
-    //3.接收服务器信息 recv
-    char recvBuf[256] = {};
-    int nlen = recv(_sock, recvBuf, sizeof(recvBuf), 0);
-    if (nlen > 0) {
-        printf("接收到数据：%s \n", recvBuf);
+
+    while (true) {
+        // 3.输入请求命令
+        char cmdBuf[128] = {}; //存储输入的命令
+        scanf("%s", cmdBuf);
+        // 4.处理请求命令
+        if ( 0 == strcmp(cmdBuf, "exit")){
+            printf("收到exit命令，任务结束\n");
+            break;
+        }
+        else {
+            // 5.向服务器发送请求命令
+            send(_sock, cmdBuf, strlen(cmdBuf)+1, 0); //+1是为了将'\0'也发过去
+        }
+
+        //3.接收服务器信息 recv
+        char recvBuf[128] = {};
+        int nlen = recv(_sock, recvBuf, sizeof(recvBuf), 0);
+        if (nlen > 0) {
+            printf("接收到数据：%s \n", recvBuf);
+        }
     }
-    //4. closesocket 关闭套接字
+
+    //6. closesocket 关闭套接字
     closesocket(_sock);
 
     WSACleanup();
+    printf("已退出\n");
     getchar();
     return 0;
 }
