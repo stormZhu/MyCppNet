@@ -42,16 +42,18 @@ int main()
     if (INVALID_SOCKET == _cSock) {
         printf("错误, 接收到无效客户端SOCKET...\n");
     }
-    printf("新客户端加入：IP = %s \n", inet_ntoa(clientAddr.sin_addr));
+    printf("新客户端加入： socket = %d socketIP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
     char _recvBuf[128] = {};
     while(true){
         //5. 先接收
         int nLen = recv(_cSock, _recvBuf, sizeof(_recvBuf), 0);
-        if (nLen < 0){
+        if (nLen <= 0){
             printf("客户端已退出， 任务结束。\n");
             break;
         }
+
         //6.处理请求
+        printf("收到命令： %s\n", _recvBuf);
         if (0 == strcmp(_recvBuf, "getName")) {
             // 7.返回数据
             char msgBuf[] = "zyq.";
