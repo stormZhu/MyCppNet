@@ -7,9 +7,27 @@
 
 //内存对齐，字节大小，前后端必须保证一致
 
-struct DataPackage {
-    int age;
-    char name[32];
+enum CMD {
+    CMD_LOGIN,
+    CMD_LOGOUT
+};
+
+struct DataHeader {
+    short dataLength;
+    short cmd;
+};
+
+struct Login {
+    char userName[32];
+    char passWord[32];
+};
+
+struct Logout {
+    char userName[32];
+};
+
+struct LoginResult {
+    int result;
 };
 
 int main()
