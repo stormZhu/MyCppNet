@@ -9,7 +9,8 @@
 
 enum CMD {
     CMD_LOGIN,
-    CMD_LOGOUT
+    CMD_LOGOUT,
+    CMD_ERROR
 };
 
 struct DataHeader {
@@ -22,14 +23,17 @@ struct Login {
     char passWord[32];
 };
 
-struct Logout {
-    char userName[32];
-};
-
 struct LoginResult {
     int result;
 };
 
+struct Logout {
+    char userName[32];
+};
+
+struct LogoutResult {
+    int result;
+};
 int main()
 {
     //启动Windows socket 2.x环境
@@ -69,26 +73,49 @@ int main()
         printf("错误, 接收到无效客户端SOCKET...\n");
     }
     printf("新客户端加入： socket = %d socketIP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
-    char _recvBuf[128] = {};
+
     while(true){
         //5. 先接收
-        int nLen = recv(_cSock, _recvBuf, sizeof(_recvBuf), 0);
+        DataHeader header = {};
+        int nLen = recv(_cSock, (char*)&header, sizeof(DataHeader), 0);
         if (nLen <= 0){
             printf("客户端已退出， 任务结束。\n");
             break;
         }
+        printf("收到命令： %d, 数据长度： %d\n", header.cmd, header.dataLength);
 
-        //6.处理请求
-        printf("收到命令： %s\n", _recvBuf);
-        if (0 == strcmp(_recvBuf, "getInfo")) {
-            // 7.返回数据
-            DataPackage dp = {18, "zyq"}; //构造时初始化
-            send(_cSock, (const char*)&dp, sizeof(DataPackage), 0);
-        }
-        else {
-            // 7.返回数据
-            char msgBuf[] = "???.";
-            send(_cSock, msgBuf, strlen(msgBuf)+1, 0); //发送'\0'
+        switch(header.cmd)
+        {
+        case CMD_LOGIN:
+            {
+            Login login = {};
+            recv(_cSock, (char*)&login, sizeof(Login), 0);
+            //忽略密码判断
+            //发送应答
+            LoginResult ret = {1};
+            send(_cSock, (char*)&header, sizeof(DataHeader), 0);
+            send(_cSock, (char*)&ret, sizeof(LoginResult), 0);
+            }
+            break;
+
+        case CMD_LOGOUT:
+            {
+            Logout logout = {0};
+            recv(_cSock, (char*)&logout, sizeof(Logout), 0);
+            //忽略密码判断...
+            //发送应答
+            LogoutResult ret = {};
+            send(_cSock, (char*)&header, sizeof(DataHeader), 0);
+            send(_cSock, (char*)&ret, sizeof(LogoutResult), 0);
+            }
+            break;
+        default:
+            {
+            header.cmd = CMD_ERROR;
+            header.dataLength = 0;
+            send(_cSock, (char*)&header, sizeof(DataHeader), 0);
+            }
+            break;
         }
     }
     //6.closesocket 关闭套接字

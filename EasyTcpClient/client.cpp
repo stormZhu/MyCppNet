@@ -5,9 +5,32 @@
 #include <Windows.h>
 #include <stdio.h>
 
-struct DataPackage {
-    int age;
-    char name[32];
+enum CMD {
+    CMD_LOGIN,
+    CMD_LOGOUT,
+    CMD_ERROR
+};
+
+struct DataHeader {
+    short dataLength;
+    short cmd;
+};
+
+struct Login {
+    char userName[32];
+    char passWord[32];
+};
+
+struct LoginResult {
+    int result;
+};
+
+struct Logout {
+    char userName[32];
+};
+
+struct LogoutResult {
+    int result;
 };
 
 int main()
@@ -49,17 +72,36 @@ int main()
             printf("收到exit命令，任务结束\n");
             break;
         }
+        else if ( 0 == strcmp(cmdBuf, "login")){
+            // 5.向服务器发送请求命令
+            DataHeader dh = {sizeof(Login), CMD_LOGIN};
+            Login login = {"zyq", "zyqlogin"};
+            send(_sock, (const char*)&dh, sizeof(DataHeader), 0);  //先发包头
+            send(_sock, (const char*)&login, sizeof(Login), 0); //再发包体
+            //接收服务器返回的数据
+            DataHeader dh2 = {};
+            LoginResult loginRet = {};
+            recv(_sock, (char *)&dh2, sizeof(DataHeader), 0); //接收头
+            recv(_sock, (char *)&loginRet, sizeof(LoginResult), 0); //接收内容
+            printf("LoginResult: %d \n", loginRet.result);
+
+        }
+        else if ( 0 == strcmp(cmdBuf, "logout")){
+            // 5.向服务器发送请求命令
+            DataHeader dh = {sizeof(Logout), CMD_LOGOUT};
+            Logout logout = {"zyq"};
+            send(_sock, (const char*)&dh, sizeof(DataHeader), 0);  //先发包头
+            send(_sock, (const char*)&logout, sizeof(Logout), 0);
+            //接收服务器返回的数据
+            DataHeader dh2 = {};
+            LogoutResult logoutRet = {};
+            recv(_sock, (char *)&dh2, sizeof(DataHeader), 0); //接收头
+            recv(_sock, (char *)&logoutRet, sizeof(LogoutResult), 0); //接收内容
+            printf("LogoutResult: %d \n", logoutRet.result);
+        }
         else {
             // 5.向服务器发送请求命令
-            send(_sock, cmdBuf, strlen(cmdBuf)+1, 0); //+1是为了将'\0'也发过去
-        }
-
-        //3.接收服务器信息 recv
-        char recvBuf[128] = {};
-        int nlen = recv(_sock, recvBuf, sizeof(recvBuf), 0);
-        if (nlen > 0) {
-            DataPackage* dp = (DataPackage*)recvBuf; // 不太安全
-            printf("接收到数据：年龄=%d, 姓名=%s \n", dp->age, dp->name);
+            printf("不支持的命令，请重新输入. \n");
         }
     }
 
