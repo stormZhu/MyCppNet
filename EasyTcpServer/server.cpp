@@ -4,6 +4,14 @@
 #include <WinSock2.h>
 #include <Windows.h>
 #include <stdio.h>
+
+//内存对齐，字节大小，前后端必须保证一致
+
+struct DataPackage {
+    int age;
+    char name[32];
+};
+
 int main()
 {
     //启动Windows socket 2.x环境
@@ -54,15 +62,10 @@ int main()
 
         //6.处理请求
         printf("收到命令： %s\n", _recvBuf);
-        if (0 == strcmp(_recvBuf, "getName")) {
+        if (0 == strcmp(_recvBuf, "getInfo")) {
             // 7.返回数据
-            char msgBuf[] = "zyq.";
-            send(_cSock, msgBuf, strlen(msgBuf)+1, 0); //发送'\0'
-        }
-        else if (0 == strcmp(_recvBuf, "getAge")) {
-            // 7.返回数据
-            char msgBuf[] = "18.";
-            send(_cSock, msgBuf, strlen(msgBuf)+1, 0); //发送'\0'
+            DataPackage dp = {18, "zyq"}; //构造时初始化
+            send(_cSock, (const char*)&dp, sizeof(DataPackage), 0);
         }
         else {
             // 7.返回数据

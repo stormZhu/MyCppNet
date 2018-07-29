@@ -4,6 +4,12 @@
 #include <WinSock2.h>
 #include <Windows.h>
 #include <stdio.h>
+
+struct DataPackage {
+    int age;
+    char name[32];
+};
+
 int main()
 {
     //启动Windows socket 2.x环境
@@ -52,7 +58,8 @@ int main()
         char recvBuf[128] = {};
         int nlen = recv(_sock, recvBuf, sizeof(recvBuf), 0);
         if (nlen > 0) {
-            printf("接收到数据：%s \n", recvBuf);
+            DataPackage* dp = (DataPackage*)recvBuf; // 不太安全
+            printf("接收到数据：年龄=%d, 姓名=%s \n", dp->age, dp->name);
         }
     }
 
