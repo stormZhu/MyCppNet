@@ -179,14 +179,16 @@ int main()
             _cSock = accept(_sock, (sockaddr*)&clientAddr, &nAddrLen);
             if (INVALID_SOCKET == _cSock) {
                 printf("错误, 接收到无效客户端SOCKET...\n");
-                continue;
+//                continue; //不要continue，因为accept失败不影响处理下面的其他客户端
             }
-            g_clients.push_back(_cSock); //将客户端的sock储存起来
-            printf("新客户端加入： socket = %d socketIP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
+            else{
+                g_clients.push_back(_cSock); //将客户端的sock储存起来
+                printf("新客户端加入： socket = %d socketIP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
+            }
         }
 
         //循环处理客户端消息 _sock已经从fdRead中删除了，所以遍历一遍fdRead即可
-        for(int n=0;n<fdRead.fd_count;n++){
+        for(size_t n=0;n<fdRead.fd_count;n++){
             if(-1 == processor(fdRead.fd_array[n])){
                 auto iter = find(g_clients.begin(), g_clients.end(), fdRead.fd_array[n]);
                 if(iter != g_clients.end()) {
