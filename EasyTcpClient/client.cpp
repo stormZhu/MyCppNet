@@ -4,6 +4,7 @@
 #include <WinSock2.h>
 #include <Windows.h>
 #include <stdio.h>
+#include <thread>
 
 enum CMD {
     CMD_LOGIN,
@@ -113,6 +114,40 @@ int processor(SOCKET _cSock)
     return 0;
 }
 
+bool g_bRun = true;
+
+void cmdThread(SOCKET _sock)
+{
+    while(true){
+        // 输入请求命令
+        char cmdBuf[128] = {}; //存储输入的命令
+        scanf("%s", cmdBuf);
+        // 处理请求命令
+        if ( 0 == strcmp(cmdBuf, "exit")){
+            printf("收到exit命令，退出cmdThread\n");
+            g_bRun = false;
+            break;
+        }
+        else if ( 0 == strcmp(cmdBuf, "login")){
+            // 向服务器发送请求命令
+            Login login;
+            strcpy(login.userName, "zyq");
+            strcpy(login.passWord, "zyqmm");
+            send(_sock, (const char*)&login, sizeof(Login), 0);//直接发送内容
+        }
+        else if ( 0 == strcmp(cmdBuf, "logout")){
+            // 向服务器发送请求命令
+            Logout logout;
+            strcpy(logout.userName, "zyq");
+            send(_sock, (const char*)&logout, sizeof(Logout), 0);
+        }
+        else {
+            // 向服务器发送请求命令
+            printf("不支持的命令，请重新输入. \n");
+        }
+    }
+}
+
 int main()
 {
     //启动Windows socket 2.x环境
@@ -143,12 +178,15 @@ int main()
         printf("连接服务器成功\n");
     }
 
-    while (true) {
+    std::thread t1(cmdThread, _sock);
+    t1.detach();
+    while (g_bRun) {
         fd_set fdRead;
         FD_ZERO(&fdRead);
 
         FD_SET(_sock, &fdRead);
-        int ret = select(_sock+1, &fdRead, NULL, NULL, NULL);
+        timeval t = {1, 0};
+        int ret = select(_sock+1, &fdRead, NULL, NULL, &t);
         if(ret < 0){
             printf("select任务结束\n");
             break;
