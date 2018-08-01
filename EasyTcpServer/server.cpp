@@ -71,7 +71,7 @@ int processor(SOCKET _cSock)
     int nLen = recv(_cSock, szRecv, sizeof(DataHeader), 0);
     DataHeader *header = (DataHeader*)szRecv;
     if (nLen <= 0){
-        printf("客户端已退出， 任务结束。\n");
+        printf("客户端<Socket=%d>已退出， 任务结束。\n", _cSock);
         return -1;
     }
 
@@ -81,8 +81,8 @@ int processor(SOCKET _cSock)
         {
         recv(_cSock, szRecv+sizeof(DataHeader), header->dataLength-sizeof(DataHeader), 0);
         Login *login = (Login*)szRecv;
-        printf("收到命令：CMD_LOGIN, 数据长度=%d, userName=%s, passWord=%s\n",
-               login->dataLength, login->userName, login->passWord);
+        printf("收到客户端<Socket=%d>请求：CMD_LOGIN, 数据长度=%d, userName=%s, passWord=%s\n",
+               _cSock, login->dataLength, login->userName, login->passWord);
         //发送应答
         LoginResult ret;
         send(_cSock, (char*)&ret, sizeof(LoginResult), 0);
@@ -93,8 +93,8 @@ int processor(SOCKET _cSock)
         {
         recv(_cSock, szRecv+sizeof(DataHeader), sizeof(Logout)-sizeof(DataHeader), 0);
         Logout *logout = (Logout*)szRecv;
-        printf("收到命令：CMD_LOGOUT, 数据长度=%d, userName=%s\n",
-               logout->dataLength, logout->userName);
+        printf("收到客户端<Socket=%d>请求：CMD_LOGOUT, 数据长度=%d, userName=%s\n",
+               _cSock, logout->dataLength, logout->userName);
         //发送应答
         LogoutResult ret;
         send(_cSock, (char*)&ret, sizeof(LogoutResult), 0);
@@ -159,8 +159,9 @@ int main()
         for(size_t n = 0; n < g_clients.size(); n++){
             FD_SET(g_clients[n], &fdRead);
         }
+        timeval t = {1, 0};
         // 返回值有可能为0吗 ？ 返回的时候fdRead会被修改
-        int ret = select(_sock+1, &fdRead, &fdWrite, &fdExp, NULL);
+        int ret = select(_sock+1, &fdRead, &fdWrite, &fdExp, &t);
         if(ret < 0){
             printf("select任务结束\n");
             break;
@@ -194,6 +195,7 @@ int main()
             }
         }
 
+//        printf("空闲时间处理其他事件\n");
     }
     //6.closesocket 关闭套接字
     for(size_t i=0;i<g_clients.size();i++){
