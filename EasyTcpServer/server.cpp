@@ -14,6 +14,7 @@ enum CMD {
     CMD_LOGIN_RESULT,
     CMD_LOGOUT,
     CMD_LOGOUT_RESULT,
+    CMD_NEW_USER_JOIN,
     CMD_ERROR
 };
 
@@ -60,6 +61,16 @@ struct LogoutResult : public DataHeader
         result = 2;
     }
     int result;
+};
+
+struct NewUserJoin : public DataHeader
+{
+    NewUserJoin(){
+        dataLength = sizeof(NewUserJoin);
+        cmd = CMD_NEW_USER_JOIN;
+        sock = 0;
+    }
+    int sock;
 };
 
 std::vector<SOCKET> g_clients;
@@ -183,6 +194,11 @@ int main()
             }
             else{
                 g_clients.push_back(_cSock); //将客户端的sock储存起来
+                //群发一个有客户登陆的消息
+                for(size_t n=0;n<g_clients.size();n++){
+                    NewUserJoin userJoin;
+                    send(g_clients[n], (const char*)&userJoin, sizeof(userJoin), 0);
+                }
                 printf("新客户端加入： socket = %d socketIP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
             }
         }
