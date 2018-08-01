@@ -193,12 +193,12 @@ int main()
 //                continue; //不要continue，因为accept失败不影响处理下面的其他客户端
             }
             else{
-                g_clients.push_back(_cSock); //将客户端的sock储存起来
                 //群发一个有客户登陆的消息
                 for(size_t n=0;n<g_clients.size();n++){
                     NewUserJoin userJoin;
                     send(g_clients[n], (const char*)&userJoin, sizeof(userJoin), 0);
                 }
+                g_clients.push_back(_cSock); //将客户端的sock储存起来
                 printf("新客户端加入： socket = %d socketIP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
             }
         }
