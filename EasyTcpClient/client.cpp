@@ -13,9 +13,9 @@
 #include <stdio.h>
 #include <thread>
 
-// #define SERVER_IP ("127.0.0.1")
-#define SERVER_IP ("192.168.31.154")
-
+#define SERVER_IP ("127.0.0.1")
+//#define SERVER_IP ("192.168.31.154")
+//#define SERVER_IP ("192.168.31.31")
 enum CMD {
     CMD_LOGIN,
     CMD_LOGIN_RESULT,
@@ -158,7 +158,7 @@ void cmdThread(SOCKET _sock)
     }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 #ifdef _WIN32
     //启动Windows socket 2.x环境
@@ -167,6 +167,11 @@ int main()
     WSAStartup(ver, &dat);
 #endif
     // -------------
+
+    std::string target_ip = SERVER_IP;
+    if (argc > 1){
+        target_ip = argv[1];
+    }
 
     //1.建立一个socket
     SOCKET _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -182,9 +187,9 @@ int main()
     _sin.sin_family = AF_INET;
     _sin.sin_port = htons(4567);
 #ifdef _WIN32
-    _sin.sin_addr.S_un.S_addr = inet_addr(SERVER_IP); //不在本机时记得修改IP地址
+    _sin.sin_addr.S_un.S_addr = inet_addr(target_ip.c_str());
 #else
-    _sin.sin_addr.s_addr = inet_addr(SERVER_IP); //不在本机时记得修改IP地址
+    _sin.sin_addr.s_addr = inet_addr(target_ip.c_str());
 #endif
     int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
     if (SOCKET_ERROR == ret){
