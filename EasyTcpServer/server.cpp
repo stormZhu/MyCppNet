@@ -1,8 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
-//#define _WINSOCK_DEPE... √ª”√…œ
-
 #include <WinSock2.h>
 #include <Windows.h>
+
 #include <stdio.h>
 
 #include <vector>

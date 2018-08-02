@@ -1,10 +1,20 @@
-#define WIN32_LEAN_AND_MEAN
-//#define _WINSOCK_DEPE... 没用上
-
-#include <WinSock2.h>
-#include <Windows.h>
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <WinSock2.h>
+    #include <Windows.h>
+#else
+    #include <unistd.h>
+    #include <arpa/inet.h>
+    #include <string.h>
+    #define SOCKET int
+    #define INVALID_SOCKET	(SOCKET)(~0)
+    #define SOCKET_ERROR	(-1)
+#endif
 #include <stdio.h>
 #include <thread>
+
+// #define SERVER_IP ("127.0.0.1")
+#define SERVER_IP ("192.168.31.154")
 
 enum CMD {
     CMD_LOGIN,
@@ -150,10 +160,12 @@ void cmdThread(SOCKET _sock)
 
 int main()
 {
+#ifdef _WIN32
     //启动Windows socket 2.x环境
     WORD ver = MAKEWORD(2, 2);
     WSADATA dat;
     WSAStartup(ver, &dat);
+#endif
     // -------------
 
     //1.建立一个socket
@@ -169,7 +181,11 @@ int main()
     sockaddr_in _sin = {}; //设置要连接的服务器
     _sin.sin_family = AF_INET;
     _sin.sin_port = htons(4567);
-    _sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+#ifdef _WIN32
+    _sin.sin_addr.S_un.S_addr = inet_addr(SERVER_IP); //不在本机时记得修改IP地址
+#else
+    _sin.sin_addr.s_addr = inet_addr(SERVER_IP); //不在本机时记得修改IP地址
+#endif
     int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
     if (SOCKET_ERROR == ret){
         printf("错误，连接服务器失败...\n");
@@ -204,9 +220,15 @@ int main()
     }
 
     //6. closesocket 关闭套接字
+#ifdef _WIN32
     closesocket(_sock);
+#else
+    close(_sock);
+#endif
 
+#ifdef _WIN32
     WSACleanup();
+#endif
     printf("已退出\n");
     getchar();
     return 0;
