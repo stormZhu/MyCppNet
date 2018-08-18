@@ -7,3 +7,7 @@ LIBS += -lws2_32
 
 SOURCES += \
     server.cpp
+
+HEADERS += \
+    EasyTcpServer.h \
+    messageheader.h

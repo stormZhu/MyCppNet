@@ -12,32 +12,32 @@ bool g_bRun = true;
 void cmdThread(EasyTcpClient *client)
 {
     while(true){
-        // ÊäÈëÇëÇóÃüÁî
-        char cmdBuf[128] = {}; //´æ´¢ÊäÈëµÄÃüÁî
+        // è¾“å…¥è¯·æ±‚å‘½ä»¤
+        char cmdBuf[128] = {}; //å­˜å‚¨è¾“å…¥çš„å‘½ä»¤
         scanf("%s", cmdBuf);
-        // ´¦ÀíÇëÇóÃüÁî
+        // å¤„ç†è¯·æ±‚å‘½ä»¤
         if ( 0 == strcmp(cmdBuf, "exit")){
             client->Close();
-            printf("ÊÕµ½exitÃüÁî£¬ÍË³öcmdThread\n");
+            printf("exit cmdThread\n");
             g_bRun = false;
             break;
         }
         else if ( 0 == strcmp(cmdBuf, "login")){
-            // Ïò·şÎñÆ÷·¢ËÍÇëÇóÃüÁî
+            // å‘æœåŠ¡å™¨å‘é€è¯·æ±‚å‘½ä»¤
             Login login;
             strcpy(login.userName, "zyq");
             strcpy(login.passWord, "zyqmm");
             client->SendData(&login);
         }
         else if ( 0 == strcmp(cmdBuf, "logout")){
-            // Ïò·şÎñÆ÷·¢ËÍÇëÇóÃüÁî
+            // å‘æœåŠ¡å™¨å‘é€è¯·æ±‚å‘½ä»¤
             Logout logout;
             strcpy(logout.userName, "zyq");
             client->SendData(&logout);
         }
         else {
-            // Ïò·şÎñÆ÷·¢ËÍÇëÇóÃüÁî
-            printf("²»Ö§³ÖµÄÃüÁî£¬ÇëÖØĞÂÊäÈë. \n");
+            // å‘æœåŠ¡å™¨å‘é€è¯·æ±‚å‘½ä»¤
+            printf("Not Supported Cmd. \n");
         }
     }
 }
@@ -53,18 +53,18 @@ int main(int argc, char *argv[])
     EasyTcpClient client;
     client.Connect((char*)target_ip.c_str(), 4567);
 
-    EasyTcpClient client2;
-    client2.Connect((char*)target_ip.c_str(), 4567);
+//    EasyTcpClient client2;
+//    client2.Connect((char*)target_ip.c_str(), 4567);
 
 
     std::thread t1(cmdThread, &client);
     t1.detach();
 
-    while(client.isRun() || client2.isRun()) {
+    while(client.isRun() ) {
         client.OnRun();
-        client2.OnRun();
+//        client2.OnRun();
     }
-    printf("ÒÑÍË³ö\n");
+    printf("exit program succeed\n");
     getchar();
     return 0;
 }

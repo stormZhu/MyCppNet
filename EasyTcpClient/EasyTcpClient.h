@@ -25,39 +25,39 @@ public:
     }
 
     virtual ~EasyTcpClient() {
-        Close(); //¹Ø±Õ¼àÌıÌ×½Ó×Ö
+        Close(); //å…³é—­ç›‘å¬å¥—æ¥å­—
 #ifdef _WIN32
         WSACleanup();
 #endif
     }
 
-    // ³õÊ¼»¯socket
+    // åˆå§‹åŒ–socket
     void initSocket() {
 #ifdef _WIN32
-        //Æô¶¯Windows socket 2.x»·¾³
+        //å¯åŠ¨Windows socket 2.xç¯å¢ƒ
         WORD ver = MAKEWORD(2, 2);
         WSADATA dat;
         WSAStartup(ver, &dat);
 #endif
         if(INVALID_SOCKET != _sock)
             Close();
-        // ½¨Á¢Ò»¸ösocket
+        // å»ºç«‹ä¸€ä¸ªsocket
         _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (INVALID_SOCKET == _sock){
-            printf("´íÎó£¬½¨Á¢socketÊ§°Ü... \n");
+            printf("Error, create socket failed... \n");
         }
         else {
-            printf("½¨Á¢Socket³É¹¦ \n");
+            printf("create socket<%d> succeed \n", (int)_sock);
         }
     }
 
-    // Á¬½Ó·şÎñÆ÷
+    // è¿æ¥æœåŠ¡å™¨
     int Connect(char *ip, unsigned short port) {
         if(INVALID_SOCKET == _sock)
             initSocket();
 
-        // connect Á¬½Ó·şÎñÆ÷
-        sockaddr_in _sin = {}; //ÉèÖÃÒªÁ¬½ÓµÄ·şÎñÆ÷
+        // connect è¿æ¥æœåŠ¡å™¨
+        sockaddr_in _sin = {}; //è®¾ç½®è¦è¿æ¥çš„æœåŠ¡å™¨
         _sin.sin_family = AF_INET;
         _sin.sin_port = htons(port);
 #ifdef _WIN32
@@ -67,17 +67,17 @@ public:
 #endif
         int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
         if (SOCKET_ERROR == ret){
-            printf("´íÎó£¬Á¬½Ó·şÎñÆ÷Ê§°Ü...\n");
+            printf("ERROR, connect server<%s> failed\n", ip);
         }
         else {
-            printf("Á¬½Ó·şÎñÆ÷³É¹¦\n");
+            printf("connect server<%s> succeed\n", ip);
         }
         return ret;
     }
 
-    //¹Ø±Õsocket
+    //å…³é—­socket
     void Close(){
-        //²»ÒªÖØ¸´close
+        //ä¸è¦é‡å¤close
         if(INVALID_SOCKET == _sock)
             return;
 
@@ -90,9 +90,9 @@ public:
     }
 
 
-    // ²éÑ¯¼àÌıÊÂ¼ş
+    // æŸ¥è¯¢ç›‘å¬äº‹ä»¶
     bool OnRun() {
-        // ²»ÔÚÔËĞĞÖĞ£¬¾Í·µ»Ø
+        // ä¸åœ¨è¿è¡Œä¸­ï¼Œå°±è¿”å›
         if(!isRun()) {
             return false;
         }
@@ -103,16 +103,16 @@ public:
         timeval t = {1, 0};
         int ret = select(_sock+1, &fdRead, NULL, NULL, &t);
         if(ret < 0){
-            printf("<Socket=%d> selectÈÎÎñ½áÊø\n", _sock);
+            printf("<Socket=%d> select work finished\n", (int)_sock);
             return false;
         }
 
-        //Èç¹ûlisten fdÓĞ¶ÁÊÂ¼ş£¬¾Íµ÷ÓÃaccept
+        //å¦‚æœlisten fdæœ‰è¯»äº‹ä»¶ï¼Œå°±è°ƒç”¨accept
         if(FD_ISSET(_sock, &fdRead)){
             FD_CLR(_sock, &fdRead);
 
             if(-1 == RecvData(_sock)){
-                printf("selectÈÎÎñ½áÊø\n");
+                printf("select work finished\n");
 //                break;
             }
         }
@@ -123,15 +123,15 @@ public:
         return _sock != INVALID_SOCKET;
     }
 
-    // ½ÓÊÕÏûÏ¢£¬´¦ÀíÕ³°ü£¬²ğ°ü
+    // æ¥æ”¶æ¶ˆæ¯ï¼Œå¤„ç†ç²˜åŒ…ï¼Œæ‹†åŒ…
     int RecvData(SOCKET _cSock)
     {
-        // »º³åÇø
+        // ç¼“å†²åŒº
         char szRecv[4096] = {};
         int nLen = recv(_cSock, szRecv, sizeof(DataHeader), 0);
         DataHeader *header = (DataHeader*)szRecv;
         if (nLen <= 0){
-            printf("Óë·şÎñÆ÷¶Ï¿ªÁ¬½Ó£¬ ÈÎÎñ½áÊø¡£\n");
+            printf("Stop the connection by server\n");
             Close();
             return -1;
         }
@@ -142,14 +142,14 @@ public:
         return 0;
     }
 
-    // ´¦ÀíÏûÏ¢
+    // å¤„ç†æ¶ˆæ¯
     void OnNetMsg(DataHeader* header) {
         switch(header->cmd)
         {
         case CMD_LOGIN_RESULT:
             {
             LoginResult *loginResult = (LoginResult*)header;
-            printf("ÊÕµ½·şÎñ¶ËÏûÏ¢£º CMD_LOGIN_RESULT, Êı¾İ³¤¶È=%d,\n",
+            printf("Revceive message: CMD_LOGIN_RESULT, dataLength=%d,\n",
                    loginResult->dataLength);
             }
             break;
@@ -157,14 +157,14 @@ public:
         case CMD_LOGOUT_RESULT:
             {
             LogoutResult *loginResult = (LogoutResult*)header;
-            printf("ÊÕµ½·şÎñ¶ËÏûÏ¢£º CMD_LOGOUT_RESULT, Êı¾İ³¤¶È=%d,\n",
+            printf("Revceive message: CMD_LOGOUT_RESULT, dataLength=%d,\n",
                    loginResult->dataLength);
             }
             break;
         case CMD_NEW_USER_JOIN:
             {
             NewUserJoin *newUser = (NewUserJoin*)header;
-            printf("ÊÕµ½·şÎñ¶ËÏûÏ¢£º CMD_NEW_USER_JOIN, Êı¾İ³¤¶È=%d,\n",
+            printf("Revceive message: CMD_NEW_USER_JOIN, dataLength=%d,\n",
                    newUser->dataLength);
             }
             break;
@@ -172,7 +172,7 @@ public:
         }
     }
 
-    // ·¢ËÍÊı¾İ
+    // å‘é€æ•°æ®
     int SendData(DataHeader* header) {
         if(isRun() && header) {
             send(_sock, (const char*)header, header->dataLength, 0);
